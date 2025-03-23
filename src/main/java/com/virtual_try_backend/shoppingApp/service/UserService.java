@@ -23,6 +23,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
+    // ✅ Register new user (Local)
     public String registerUser(SignupRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new RuntimeException("Email already in use!");
@@ -39,6 +40,7 @@ public class UserService {
         return "User registered successfully!";
     }
 
+    // ✅ Login user (Local)
     public String loginUser(LoginRequest request) {
         Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
 
@@ -50,5 +52,25 @@ public class UserService {
         }
 
         throw new RuntimeException("Invalid email or password!");
+    }
+
+    // ✅ Google OAuth2 Signup & Login
+    public String registerOrUpdateOAuth2User(String email, String fullName) {
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        User user;
+
+        if (existingUser.isPresent()) {
+            user = existingUser.get();
+            user.setFullName(fullName); // ✅ Update name if changed
+        } else {
+            user = new User();
+            user.setEmail(email);
+            user.setFullName(fullName);
+            user.setRole("ROLE_USER");
+            user.setProvider("GOOGLE"); // ✅ Set OAuth provider
+            userRepository.save(user);
+        }
+
+        return jwtUtil.generateToken(user.getEmail()); // ✅ Return JWT for OAuth user
     }
 }

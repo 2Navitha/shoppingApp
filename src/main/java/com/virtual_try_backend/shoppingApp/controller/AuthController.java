@@ -3,50 +3,38 @@ package com.virtual_try_backend.shoppingApp.controller;
 import com.virtual_try_backend.shoppingApp.dto.LoginRequest;
 import com.virtual_try_backend.shoppingApp.dto.SignupRequest;
 import com.virtual_try_backend.shoppingApp.service.UserService;
-import com.virtual_try_backend.shoppingApp.config.JwtUtil;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://127.0.0.1:5500", allowCredentials = "true")
+@RequestMapping("/auth")
 public class AuthController {
+
     private final UserService userService;
-    private final JwtUtil jwtUtil;
 
-    public AuthController(UserService userService, JwtUtil jwtUtil) {
+    public AuthController(UserService userService) {
         this.userService = userService;
-        this.jwtUtil = jwtUtil;
     }
 
-    // ✅ User Signup
-    @PostMapping("/signup")
-    public ResponseEntity<Map<String, String>> signup(@RequestBody SignupRequest request) {
-        String message = userService.registerUser(request);
-        return ResponseEntity.ok(Map.of("message", message));
+    // ✅ Register new user (Local)
+    @PostMapping("/register")
+    public String registerUser(@RequestBody SignupRequest request) {
+        return userService.registerUser(request);
     }
 
-    // ✅ User Login with JWT
+    // ✅ Login user (Local)
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestBody LoginRequest request) {
-        String token = userService.loginUser(request);
-        return ResponseEntity.ok(Map.of("token", token));
+    public String loginUser(@RequestBody LoginRequest request) {
+        return userService.loginUser(request);
     }
 
-    // ✅ Google OAuth2 Login Success Handler
-    @GetMapping("/google-success")
-    public ResponseEntity<Map<String, String>> googleSuccess(@AuthenticationPrincipal OAuth2User user) {
-        if (user == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
-        }
-
-        String email = user.getAttribute("email");
-        String token = jwtUtil.generateToken(email);
-
-        return ResponseEntity.ok(Map.of("token", token, "email", email));
+    // ✅ Google OAuth2 Login & Signup
+    @PostMapping("/google-signup")
+    public String googleSignup(@RequestBody Map<String, Object> googleUserData) {
+        String email = (String) googleUserData.get("email");
+        String name = (String) googleUserData.get("name");
+        return userService.registerOrUpdateOAuth2User(email, name);
     }
 }

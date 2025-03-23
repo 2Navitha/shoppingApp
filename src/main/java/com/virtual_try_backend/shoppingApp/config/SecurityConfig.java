@@ -38,13 +38,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ CORS Config Added
                 .csrf(csrf -> csrf.disable()) // ✅ Disable CSRF for APIs
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/login", "/signup", "/api/auth/**").permitAll() // ✅ Allow API login/signup
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/", "/auth/**").permitAll() // ✅ Allow API login/signup
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo.userService(oAuth2UserService()))
-                        .defaultSuccessUrl("/dashboard", true)
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
@@ -68,7 +66,7 @@ public class SecurityConfig {
                 newUser.setEmail(email);
                 newUser.setFullName(oAuth2User.getAttribute("name"));
                 newUser.setRole("ROLE_USER");
-                newUser.setProvider("OAUTH2");
+                newUser.setProvider("GOOGLE");
                 return userRepository.save(newUser);
             });
 
@@ -82,14 +80,13 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // ✅ CORS Configuration Bean
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://127.0.0.1:5500"); // ✅ Allow frontend origin
-        configuration.addAllowedMethod("*"); // ✅ Allow all HTTP methods
-        configuration.addAllowedHeader("*"); // ✅ Allow all headers
-        configuration.setAllowCredentials(true); // ✅ Allow credentials (cookies, authorization headers)
+        configuration.addAllowedOrigin("http://localhost:3000"); // ✅ Allow frontend origin
+        configuration.addAllowedMethod("*");
+        configuration.addAllowedHeader("*");
+        configuration.setAllowCredentials(true);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
