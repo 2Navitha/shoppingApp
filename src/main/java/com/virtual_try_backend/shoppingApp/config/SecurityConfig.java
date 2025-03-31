@@ -1,7 +1,7 @@
 package com.virtual_try_backend.shoppingApp.config;
 
-import com.virtual_try_backend.shoppingApp.repository.UserRepository;
 import com.virtual_try_backend.shoppingApp.entity.User;
+import com.virtual_try_backend.shoppingApp.repository.UserRepository;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -35,10 +35,11 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ CORS Config Added
-                .csrf(csrf -> csrf.disable()) // ✅ Disable CSRF for APIs
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/auth/**").permitAll() // ✅ Allow API login/signup
+                        .requestMatchers("/", "/api/auth/**").permitAll() // Updated to allow /api/auth endpoints
+                        .requestMatchers("/seller/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth2 -> oauth2
@@ -83,7 +84,9 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.addAllowedOrigin("http://localhost:3000"); // ✅ Allow frontend origin
+        // Allow specific origins for your frontends
+        configuration.addAllowedOrigin("http://localhost:3000");
+        configuration.addAllowedOrigin("http://127.0.0.1:5500");
         configuration.addAllowedMethod("*");
         configuration.addAllowedHeader("*");
         configuration.setAllowCredentials(true);
